@@ -1,51 +1,140 @@
+axios.defaults.headers.common['X-Auth-Token']='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+
 // GET REQUEST
 function getTodos() {
-  console.log('GET Request');
+//   axios({
+//     method:'get',
+//     url:'https://jsonplaceholder.typicode.com/todos?_limit=5'
+//   }).then(resolve=>showOutput(resolve))
+//   .catch(err=>console.error(err))
+// }
+axios.get('https://jsonplaceholder.typicode.com/todos?_limit=5',{timeout:5000})
+     .then(resolve=>showOutput(resolve))
+     .catch(err=>console.error(err))
 }
-
 // POST REQUEST
 function addTodo() {
-  console.log('POST Request');
+  //  axios({
+  //   method:'post',
+  //   url:'https://jsonplaceholder.typicode.com/todos',
+  //   data:{
+  //     title:'new ToDo',
+  //     completed:'false'
+  //   }
+  //  })
+    axios.post('https://jsonplaceholder.typicode.com/todos',{title:'new ToDo',completed:'false'})
+    .then(resolve=>showOutput(resolve))
+   .catch(err=>console.error(err))
 }
 
 // PUT/PATCH REQUEST
 function updateTodo() {
-  console.log('PUT/PATCH Request');
+  axios.patch('https://jsonplaceholder.typicode.com/todos/1',{title:'updated ToDo',completed:'true'})
+    .then(resolve=>showOutput(resolve))
+   .catch(err=>console.error(err))
 }
 
 // DELETE REQUEST
 function removeTodo() {
-  console.log('DELETE Request');
+  axios.delete('https://jsonplaceholder.typicode.com/todos/1')
+    .then(resolve=>showOutput(resolve))
+   .catch(err=>console.error(err))
 }
 
 // SIMULTANEOUS DATA
 function getData() {
-  console.log('Simultaneous Request');
+  axios.all([
+    axios.get('https://jsonplaceholder.typicode.com/todos'),
+    axios.get('https://jsonplaceholder.typicode.com/posts')
+  ]).then(resolve=>{
+    console.log(resolve[0])
+    console.log(resolve[1])
+  })
+  .catch(err=>console.error(err))
 }
 
 // CUSTOM HEADERS
 function customHeaders() {
-  console.log('Custom Headers');
+  const config={
+    headers:{
+      'Content Type':'application/json',
+      Authorisation: 'some token'
+
+    }
+  }
+  axios.post('https://jsonplaceholder.typicode.com/todos',
+    {title:'new ToDo',
+    completed:'false',
+    config
+  }).then(resolve=>showOutput(resolve))
+  .catch(err=>console.error(err))
 }
 
 // TRANSFORMING REQUESTS & RESPONSES
 function transformResponse() {
-  console.log('Transform Response');
+  const options={
+    method:'post',
+    url:'https://jsonplaceholder.typicode.com/posts',
+    data:{title:'Hello!'},
+    transformResponse: axios.defaults.transformResponse.concat(data=>{
+      data.title=data.title.toUpperCase()
+      return data
+    })
+   
+  }
+  axios(options).then(res=>showOutput(res))
 }
 
 // ERROR HANDLING
 function errorHandling() {
-  console.log('Error Handling');
+  axios.get('https://jsonplaceholder.typicode.com/todoss',{
+    validateStatus: function(status){
+      return status < 500
+    }
+  })
+  .then(res=>showOutput(res))
+  .catch(err=>{
+    if(err.response){
+      console.log(err.response.data)
+      console.log(err.response.status)
+      console.log(err.response.headers)
+    }
+  })
 }
 
 // CANCEL TOKEN
 function cancelToken() {
-  console.log('Cancel Token');
+  const source=axios.CancelToken.source()
+  axios.get('https://jsonplaceholder.typicode.com/todos',{
+    cancelToken:source.token
+  })
+  .then(res=>showOutput(res))
+  .catch(thrown=>{
+    if(axios.isCancel(thrown)){
+      console.log('Request cancelled',thrown.message)
+    }
+  })
+  if(true){
+    source.cancel('Request cancelled')
+  }
 }
 
 // INTERCEPTING REQUESTS & RESPONSES
-
+axios.interceptors.request.use(
+  config=>{
+    console.log(`${config.method.toUpperCase()} request send to
+     ${config.url} at ${new Date().getTime()}`)
+    return config
+  },
+  error=>{
+  return Promise.reject(error)
+}
+)
 // AXIOS INSTANCES
+const instance= axios.create({
+  baseURL:'https://jsonplaceholder.typicode.com'
+})
+//instance.get('/comments').then(res=>showOutput(res))
 
 // Show output in browser
 function showOutput(res) {
